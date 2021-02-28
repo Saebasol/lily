@@ -1,34 +1,39 @@
 import React, { useState, useEffect } from 'react'
 import JSZip from 'jszip'
-import saveAs from 'file-saver';
+import saveAs from 'file-saver'
+import api from './api'
 
 
 function App() {
 
-  const [data, setData] = useState(0)
-  // const headers = { 'Authorization': '' }
+  const [index, setIndex] = useState(0)
+  const downloadIndex = window.location.pathname.replace("/", "")
 
-  // TODO: Change the user to selectively download using the url path, and change the folder and compressed file name
   async function mainFunc() {
-    let zip = new JSZip()
-    let imageFolder = zip.folder('1')
+    const zip = new JSZip()
+    const imageFolder = zip.folder(downloadIndex)
 
-    const imageInfoResponse = await fetch('https://doujinshiman.ga/v3/api/hitomi/images/1', { headers })
+    const imageInfoResponse = await fetch(api + `api/hitomi/images/${downloadIndex}`)
+    if (imageInfoResponse.status == 404) {
+      alert("찾을수 없습니다.")
+      return
+    }
     const imagesInfo = await imageInfoResponse.json()
+
+    let count = 0
 
     const downloadImage = imagesInfo.images.map(async (imageInfo, index) => {
       const image = await fetch(imageInfo.url)
       const imgBlob = await image.blob()
 
-      // TODO: Get filename
-      imageFolder.file(`${index}.png`, imgBlob)
-      setData(index + 1)
+      imageFolder.file(imageInfo.filename, imgBlob)
+      setIndex(count += 1)
     })
 
-    Promise.all(downloadImage).then(() =>
+    await Promise.all(downloadImage).then(() =>
       zip.generateAsync({ type: 'blob' })
         .then(content => {
-          saveAs.saveAs(content, '1.zip')
+          saveAs.saveAs(content, `${downloadIndex}.zip`)
         }))
   }
 
@@ -38,7 +43,7 @@ function App() {
 
   return (
     <div className='App'>
-      <h1>다운로드 중: {data}</h1>
+      <h1>다운로드 중: {index}</h1>
     </div>
 
   )

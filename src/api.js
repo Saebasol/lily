@@ -1,0 +1,1 @@
+export default "https://doujinshiman.ga/v3/"
