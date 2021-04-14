@@ -1,1 +1,1 @@
-export default "https://doujinshiman.ga/v3/"
+export default "https://beta.doujinshiman.ga/v4/"
