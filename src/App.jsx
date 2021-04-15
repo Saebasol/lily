@@ -13,6 +13,9 @@ function App() {
 
 
   async function mainFunc() {
+    if (!downloadIndex || Number.isInteger(parseInt(downloadIndex))) {
+      alert("인자값이 주어지지 않았습니다!")
+    }
     if (window.confirm("언어의 한계로 많은 이미지는 다운로드 할수 없을수도 있습니다. 시도하시겠습니까?")) {
       const zip = new JSZip()
       const imageFolder = zip.folder(downloadIndex)
