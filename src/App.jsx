@@ -21,7 +21,7 @@ function App() {
       const zip = new JSZip()
       const imageFolder = zip.folder(downloadIndex)
 
-      const imageInfoResponse = await fetch(api + `api/hitomi/images/${downloadIndex}`)
+      const imageInfoResponse = await fetch(api + `hitomi/images/${downloadIndex}`)
       if (imageInfoResponse.status == 404) {
         alert("찾을수 없습니다.")
         return
@@ -31,7 +31,7 @@ function App() {
       let count = 0
 
       const downloadImage = imagesInfo.files.map(async (imageInfo, index) => {
-        const image = await fetch(imageInfo.image)
+        const image = await fetch(api + "proxy/" + imageInfo.image)
         const imgBlob = await image.blob()
 
         imageFolder.file(imageInfo.name, imgBlob)
