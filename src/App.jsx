@@ -8,7 +8,9 @@ function App() {
   const { useState, useEffect } = React
 
   const [index, setIndex] = useState(0)
-  const downloadIndex = window.location.pathname.replace("/", "")
+  const params = new URLSearchParams(window.location.search)
+  const downloadIndex = params.get("index")
+
 
   async function mainFunc() {
     if (window.confirm("언어의 한계로 많은 이미지는 다운로드 할수 없을수도 있습니다. 시도하시겠습니까?")) {
