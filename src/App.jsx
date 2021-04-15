@@ -8,13 +8,14 @@ function App() {
   const { useState, useEffect } = React
 
   const [index, setIndex] = useState(0)
-  const params = new URLSearchParams(window.location.search)
-  const downloadIndex = params.get("index")
-
 
   async function mainFunc() {
-    if (!downloadIndex || Number.isInteger(parseInt(downloadIndex))) {
+    const params = new URLSearchParams(window.location.search)
+    const downloadIndex = params.get("index")
+
+    if (!downloadIndex || !Number.isInteger(parseInt(downloadIndex))) {
       alert("인자값이 주어지지 않았습니다!")
+      return
     }
     if (window.confirm("언어의 한계로 많은 이미지는 다운로드 할수 없을수도 있습니다. 시도하시겠습니까?")) {
       const zip = new JSZip()
@@ -29,19 +30,17 @@ function App() {
 
       let count = 0
 
-      const downloadImage = imagesInfo.images.map(async (imageInfo, index) => {
-        const image = await fetch(imageInfo.url)
+      const downloadImage = imagesInfo.files.map(async (imageInfo, index) => {
+        const image = await fetch(imageInfo.image)
         const imgBlob = await image.blob()
 
-        imageFolder.file(imageInfo.filename, imgBlob)
+        imageFolder.file(imageInfo.name, imgBlob)
         setIndex(count += 1)
       })
 
-      await Promise.all(downloadImage).then(() =>
-        zip.generateAsync({ type: 'blob' })
-          .then(content => {
-            saveAs.saveAs(content, `${downloadIndex}.zip`)
-          }))
+      await Promise.all(downloadImage)
+      const content = await zip.generateAsync({ type: 'blob' })
+      saveAs.saveAs(content, `${downloadIndex}.zip`)
     }
   }
 
