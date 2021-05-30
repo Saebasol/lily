@@ -21,7 +21,7 @@ const theme = extendTheme({
   initialColorMode: 'dark'
 })
 
-function getProgress(now, total){
+function getProgress(now, total) {
   return now / total * 100
 }
 
@@ -44,14 +44,14 @@ function App() {
     if (window.confirm("브라우저의 한계로 많은 이미지는 다운로드 할수 없을수도 있습니다. 시도하시겠습니까?")) {
       const zip = new JSZip()
       const imageFolder = zip.folder(downloadIndex)
-  
+
       const imageInfoResponse = await fetch(api + `hitomi/images/${downloadIndex}`)
       if (imageInfoResponse.status == 404) {
         alert("찾을수 없습니다.")
         return
       }
       const imagesInfo = imageInfoResponse.json()
-  
+
       let count = 0
       let failedCount = 0
       let tries = 0
@@ -59,16 +59,23 @@ function App() {
 
       let failedList = []
 
+      function addFailed(url, filename) {
+        failedList.push({ "url": url, "filename": filename })
+        failedCount++
+        setFailed(failedCount)
+      }
       async function getImage(url, filename) {
+
         let image
-        try{
+        try {
           image = await fetch(url)
-        } catch (e){
-          failedList.push({"url":url, "filename":filename})
-          failedCount++
-          setFailed(failedCount)
+        } catch (e) {
+          addFailed(url, filename)
         }
-        if(image){
+        if (image) {
+          if (image.status != 200) {
+            addFailed(url, filename)
+          }
           const imgBlob = await image.blob()
           imageFolder.file(filename, imgBlob)
           count++
@@ -79,24 +86,24 @@ function App() {
       const downloadImage = imagesInfo.files.map(async (imageInfo, index) => {
         total = imagesInfo.files.length
         await getImage(api + "proxy/" + imageInfo.image, imageInfo.name)
-    })
+      })
       await Promise.all(downloadImage)
-      while(failedList.length > 0){
+      while (failedList.length > 0) {
         tries++
         setTries(tries)
         count = 0
         failedCount = 0
         total = failedList.length
 
-        const tryFailed = failedList.map(async (failedDict) =>{
-          failedList = failedList.filter(value =>{
+        const tryFailed = failedList.map(async (failedDict) => {
+          failedList = failedList.filter(value => {
             return value["url"] !== failedDict["url"] && value["filename"] !== failedDict["filename"]
           })
           return await getImage(failedDict["url"], failedDict["filename"], failedList.length)
         })
         await Promise.all(tryFailed)
       }
-      
+
       setFailed(0)
       setIsCompress(true)
       const content = await zip.generateAsync({ type: 'blob' })
@@ -113,11 +120,11 @@ function App() {
     <ChakraProvider theme={theme}>
       <Flex height="100vh" alignItems="center" justifyContent="center">
         <Flex direction="column" p={12} rounded={6}>
-        {isComplete ? <Heading textAlign="center" mb={7}>다운로드 완료</Heading> : isCompress? <Heading textAlign="center" mb={7}>압축 중... (시간이 좀 걸릴수 도 있어요)</Heading> : <Heading textAlign="center" mb={7}>다운로드중... {Number((progress).toFixed(1))}%</Heading>}
-        <Heading textAlign="center" mb={7}>재시도한 횟수{tries}회</Heading>
-        <Heading textAlign="center" mb={7}>실패한 항목 수: {failed}개</Heading>
-        <Text fontSize="3xl">실패할경우 실패한 항목만 다시 시도합니다.</Text>
-        <Progress hasStripe value={progress}/>
+          {isComplete ? <Heading textAlign="center" mb={7}>다운로드 완료</Heading> : isCompress ? <Heading textAlign="center" mb={7}>압축 중... (시간이 좀 걸릴수도 있어요)</Heading> : <Heading textAlign="center" mb={7}>다운로드중... {Number((progress).toFixed(1))}%</Heading>}
+          <Heading textAlign="center" mb={7}>재시도한 횟수 {tries}회</Heading>
+          <Heading textAlign="center" mb={7}>실패한 항목 수: {failed}개</Heading>
+          <Text fontSize="3xl">실패할경우 실패한 항목만 다시 시도합니다.</Text>
+          <Progress hasStripe value={progress} />
         </Flex>
       </Flex>
     </ChakraProvider >
