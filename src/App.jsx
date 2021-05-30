@@ -50,7 +50,7 @@ function App() {
         alert("찾을수 없습니다.")
         return
       }
-      const imagesInfo = imageInfoResponse.json()
+      const imagesInfo = await imageInfoResponse.json()
 
       let count = 0
       let failedCount = 0
